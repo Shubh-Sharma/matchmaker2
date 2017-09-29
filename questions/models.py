@@ -1,8 +1,15 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 # Create your models here.
+
+class QuestionManager(models.Manager):
+	def get_unanswered(self, user):
+		q1 = Q(useranswer__user=user)
+		qs = self.exclude(q1)
+		return qs
 
 class Question(models.Model):
 	text = models.TextField()
@@ -13,6 +20,8 @@ class Question(models.Model):
 
 	def __unicode__(self): #def __str__(self):
 		return self.text[:10]
+
+	objects = QuestionManager()
 
 
 class Answer(models.Model):

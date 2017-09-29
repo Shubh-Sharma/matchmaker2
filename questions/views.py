@@ -1,7 +1,10 @@
+from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Create your views here.
+
+from matches.signals import user_matches_update
 
 from .forms import UserResponseForm
 from .models import Question, Answer, UserAnswer
@@ -16,12 +19,16 @@ def single(request, id):
 		
 		try:
 			user_answer = UserAnswer.objects.get(user=request.user, question=instance)
+			updated_q = True
 		except UserAnswer.DoesNotExist:
 			user_answer = UserAnswer()
+			updated_q = False
 		except UserAnswer.MultipleObjectsReturned:
 			user_answer = UserAnswer.objects.filter(user=request.user, question=instance)[0]
+			updated_q = True
 		except:
 			user_answer = UserAnswer()
+			updated_q = False
 
 		form = UserResponseForm(request.POST or None)
 		if form.is_valid():
@@ -54,8 +61,21 @@ def single(request, id):
 				user_answer.their_importance = "Not Important"
 			user_answer.save()
 
-			next_q = Question.objects.all().order_by("?").first()
-			return redirect("question_single", id=next_q.id)
+			user_matches_update.send(user=request.user, sender=user_answer.__class__)
+
+
+			if updated_q:
+				messages.success(request, "Your response was updated successfully.<br><a href='#'>Hello</a>", extra_tags="safe")
+			else:
+				messages.success(request, "Your response was saved successfully.")
+
+
+			next_q = Question.objects.get_unanswered(request.user).order_by("?")
+			if next_q.count() > 0:
+				next_q_instance = next_q.first()
+				return redirect("question_single", id=next_q_instance.id)
+			else:
+				return redirect("home")
 
 
 		context = {

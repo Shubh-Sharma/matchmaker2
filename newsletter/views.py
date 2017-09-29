@@ -3,84 +3,12 @@ from django.core.mail import send_mail
 from django.shortcuts import render
 
 from jobs.models import Job, Employer, Location
-
+from likes.models import UserLike
 from matches.models import Match, PositionMatch, EmployerMatch, LocationMatch
 from questions.models import Question
 
 from .forms import ContactForm, SignUpForm
 from .models import SignUp
-
-# Create your views here.
-def home(request):
-	title = 'Sign Up Now'
-	form = SignUpForm(request.POST or None)
-	context = {
-		"title": title,
-		"form": form
-	}
-
-
-
-	if form.is_valid():
-		instance = form.save(commit=False)
-
-		full_name = form.cleaned_data.get("full_name")
-		if not full_name:
-			full_name = "New full name"
-		instance.full_name = full_name
-		instance.save()
-		context = {
-			"title": "Thank you"
-		}
-
-	if request.user.is_authenticated():
-
-		# PositionMatch.objects.update_top_suggestions(request.user, 20)
-		matches = Match.objects.get_matches_with_percent(request.user)[:6]
-		positions = PositionMatch.objects.filter(user=request.user)[:6]
-
-		if positions.count() > 0:
-			positions[0].check_update(20) # 20 matches total
-		locations = LocationMatch.objects.filter(user=request.user)[:6]
-		employers = EmployerMatch.objects.filter(user=request.user)[:6]
-		# for match in matches:
-		# 	job_set = match[0].userjob_set.all()
-		# 	if job_set.count() > 0:
-		# 		for job in job_set:
-		# 			if job.position not in positions:
-		# 				positions.append(job.position)
-		# 				try:
-		# 					the_job = Job.objects.get(text__iexact=job.position)
-		# 					jobmatch, created = PositionMatch.objects.get_or_create(user=request.user, job=the_job)
-		# 				except:
-		# 					pass
-		# 				print PositionMatch.objects.filter(user=request.user)
-		# 			if job.location not in locations:
-		# 				locations.append(job.location)
-		# 				try:
-		# 					the_loc = Location.objects.get(name__iexact=job.location)
-		# 					locMatch, created = LocationMatch.objects.get_or_create(user=request.user, location=the_loc)
-		# 				except:
-		# 					pass
-		# 			if job.employer_name not in employers:
-		# 				employers.append(job.employer_name)
-		# 				try:
-		# 					the_employer = Employer.objects.get(name__iexact=job.employer_name)
-		# 					empymatch, created = EmployerMatch.objects.get_or_create(user=request.user, employer=the_employer)
-		# 				except:
-		# 					pass
-
-		queryset = Question.objects.all().order_by('-timestamp') 
-		context = {
-			"queryset": queryset,
-			"matches": matches,
-			"positions": positions,
-			"locations": locations,
-			"employers": employers
-		}
-		return render(request, "questions/home.html", context)
-
-	return render(request, "home.html", context)
 
 
 

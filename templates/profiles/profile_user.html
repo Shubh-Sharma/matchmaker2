@@ -7,7 +7,6 @@
 
 
 <h3>{{ profile.user }}</h3>
-<p class='lead'>Match: {{ match.get_percent }} </p>
 
 <div class='col-sm-2'>
 {% if profile.picture %}
@@ -19,17 +18,6 @@
 {% endif %}
 </div>
 
-<a href="{{ profile.like_link }}">{% if do_i_like %}Unlike{% else %}Like{% endif %}</a>
-
-{% if mutual_like %}
-<p class="lead">
-	You are connected!
-</p>
-<small>
-	Email: {{ profile.user.email }}
-</small>
-{% endif %}
-
 {% if jobs %}
 
 <ul>
@@ -38,7 +26,14 @@
 <li>{{ job.position }} in {{ job.location }} at {{ job.employer_name }} </li>
 
 {% endfor %}
+<li><a href="{% url 'jobs_edit' %}">Edit your jobs.</a></li>
 </ul>
+
+{% else %}
+
+<p class="lead">
+You do not currently have Jobs. <a href="{% url 'job_add' %}">Add some.</a>
+</p>
 
 {% endif %}
 
